@@ -1,0 +1,19 @@
+# NEVER upload API keys
+.env
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+
+# Mac
+.DS_Store
+
+# IDE
+.vscode/
+.idea/

@@ -1,0 +1,6 @@
+nimble-python
+clickhouse-connect
+google-generativeai
+python-dotenv
+requests
+ddtrace
