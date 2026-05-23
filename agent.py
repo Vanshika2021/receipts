@@ -121,10 +121,13 @@ def find_raw_statements(person_name: str) -> str:
     """Search Nimble and fetch full content from top articles."""
     print(f"\n🔍 Searching web for statements by {person_name}...")
 
+    # Cast a wide net with varied query types
     queries = [
-        f"{person_name} will by 2025 promise plan",
-        f"{person_name} will by 2026 commit launch",
-        f"{person_name} goal target deadline announcement",
+        f"{person_name} promised pledged committed vowed",
+        f"{person_name} will by 2024 2025 2026 target",
+        f"{person_name} pledge promise broken kept failed",
+        f"{person_name} campaign promise policy commitment",
+        f"{person_name} announced plan launch deadline",
     ]
 
     all_text = ""
@@ -139,11 +142,9 @@ def find_raw_statements(person_name: str) -> str:
             )
             if result and hasattr(result, 'results'):
                 for r in result.results[:2]:
-                    # Always add title + description (good signal)
                     all_text += f"\nTitle: {r.title}\nDescription: {r.description}\nURL: {r.url}\n"
 
-                    # Fetch full content from first unseen URL
-                    if r.url not in urls_fetched and len(urls_fetched) < 4:
+                    if r.url not in urls_fetched and len(urls_fetched) < 6:
                         urls_fetched.add(r.url)
                         print(f"  → Fetching: {r.title[:60]}...")
                         content = fetch_url_content(r.url)
@@ -161,22 +162,24 @@ def extract_promises(person_name: str, raw_text: str) -> list:
 
     prompt = f"""You are a research assistant analyzing public statements by {person_name}.
 
-Extract ONLY concrete, specific promises or commitments that:
-1. Have a clear deadline or timeframe ("by 2025", "within 2 years", "by Q4", "this year")
-2. Are specific and measurable — not vague hopes or general directions
-3. Were made publicly by {person_name} or on behalf of their company
+Extract concrete promises, pledges, commitments or goals that:
+1. Have ANY timeframe — specific ("by March 2025") OR vague ("within 2 years", "this year", "soon", "by end of term")
+2. Are specific enough to evaluate — not just general aspirations
+3. Were made publicly by {person_name} or on behalf of their organization/government
+
+Be generous in what you include — if it sounds like a commitment, include it.
 
 Return a JSON array. Each item:
 {{
-  "promise": "specific thing promised",
-  "deadline": "timeframe stated (e.g. end of 2025, Q2 2026)",
-  "deadline_date": "YYYY-MM-DD best estimate",
+  "promise": "what was promised",
+  "deadline": "timeframe stated — use 'unspecified' if vague",
+  "deadline_date": "YYYY-MM-DD best estimate, use 2025-12-31 if unclear",
   "date_said": "when this was said, or empty string",
-  "company": "company name or empty string",
+  "company": "company/party/country or empty string",
   "source_url": "source URL or empty string"
 }}
 
-If you find NO concrete promises with deadlines, return []
+Return [] ONLY if there are truly no commitments whatsoever.
 Return ONLY valid JSON. No markdown, no explanation.
 
 TEXT TO ANALYZE:
@@ -284,12 +287,18 @@ def publish_to_github_pages(person_name: str, promises_with_verdicts: list) -> s
         v = item.get("verdict_data", {})
         emoji = {"kept":"✅","broken":"❌","partial":"⚠️","unclear":"❓","pending":"⏳"}.get(v.get("verdict","pending"),"⏳")
         color = {"kept":"#22c55e","broken":"#ef4444","partial":"#f59e0b","unclear":"#94a3b8","pending":"#94a3b8"}.get(v.get("verdict","pending"),"#94a3b8")
+        
+        # Source link
+        source_url = item.get("source_url", "") or v.get("evidence_url", "")
+        source_html = f'<a href="{source_url}" target="_blank">🔗 Source</a>' if source_url else "<span style='color:#475569'>No source</span>"
+        
         rows += f"""
         <tr>
             <td>{item['promise']}</td>
             <td>{item['deadline']}</td>
             <td style="color:{color};font-weight:bold">{emoji} {v.get('verdict','pending').title()}</td>
             <td>{v.get('summary','Deadline not yet reached')}</td>
+            <td>{source_html}</td>
         </tr>"""
 
     html = f"""<!DOCTYPE html>
@@ -299,11 +308,11 @@ def publish_to_github_pages(person_name: str, promises_with_verdicts: list) -> s
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Receipts — {person_name}</title>
 <style>
-  body {{ font-family: -apple-system, sans-serif; max-width: 900px; margin: 40px auto; padding: 0 20px; background: #0f172a; color: #e2e8f0; }}
+  body {{ font-family: -apple-system, sans-serif; max-width: 1000px; margin: 40px auto; padding: 0 20px; background: #0f172a; color: #e2e8f0; }}
   h1 {{ color: #00D4AA; }} h2 {{ color: #94a3b8; font-size: 1rem; }}
   table {{ width: 100%; border-collapse: collapse; margin-top: 20px; }}
   th {{ background: #1e293b; padding: 12px; text-align: left; color: #00D4AA; }}
-  td {{ padding: 12px; border-bottom: 1px solid #1e293b; vertical-align: top; }}
+  td {{ padding: 12px; border-bottom: 1px solid #1e293b; vertical-align: top; font-size: 0.9rem; }}
   tr:hover td {{ background: #1e293b; }}
   .footer {{ margin-top: 40px; color: #475569; font-size: 0.8rem; }}
   a {{ color: #00D4AA; }}
@@ -314,7 +323,7 @@ def publish_to_github_pages(person_name: str, promises_with_verdicts: list) -> s
 <h2>AI-powered public accountability — tracked by <a href="https://vanshika2021.github.io/receipts/">Receipts</a></h2>
 <p>Analyzed: {datetime.now().strftime('%B %d, %Y')}</p>
 <table>
-  <tr><th>Promise</th><th>Deadline</th><th>Verdict</th><th>Evidence</th></tr>
+  <tr><th>Promise</th><th>Deadline</th><th>Verdict</th><th>Evidence</th><th>Source</th></tr>
   {rows}
 </table>
 <div class="footer">
@@ -387,48 +396,56 @@ def publish_to_senso(person_name: str, promises_with_verdicts: list) -> str:
 
     try:
         import subprocess
-        import tempfile
 
-        senso_env = {**os.environ, "SENSO_API_KEY": SENSO_API_KEY}
+        senso_env = {**os.environ, "SENSO_API_KEY": SENSO_API_KEY or ""}
+        if not senso_env.get("SENSO_API_KEY"):
+            print("  ⚠️ No Senso API key found")
+            return ""
 
-        # Write content to temp markdown file
-        slug = person_name.lower().replace(" ", "-")
-        with tempfile.NamedTemporaryFile(
-            mode='w', suffix='.md', delete=False,
-            prefix=f"receipts-{slug}-"
-        ) as f:
-            f.write(content)
-            temp_path = f.name
-
-        # Ingest into Senso knowledge base
-        ingest_result = subprocess.run([
-            "senso", "ingest", "upload", temp_path,
+        # Step 1: Create prompt
+        prompt_result = subprocess.run([
+            "senso", "prompts", "create",
+            "--data", json.dumps({
+                "question_text": f"Did {person_name} keep their public promises?",
+                "type": "awareness"
+            }),
             "--output", "json", "--quiet"
-        ], capture_output=True, text=True, env=senso_env, timeout=30)
+        ], capture_output=True, text=True, env=senso_env, timeout=15)
 
-        os.unlink(temp_path)
+        stdout = prompt_result.stdout
+        json_start = stdout.find("{")
+        prompt_id = json.loads(stdout[json_start:]).get("prompt_id", "") if json_start >= 0 else ""
 
-        if ingest_result.returncode == 0:
-            # Parse content ID from response
-            stdout = ingest_result.stdout
+        if not prompt_id:
+            print(f"  ⚠️ No prompt ID")
+            return ""
+
+        # Step 2: Save as draft (fast)
+        draft_result = subprocess.run([
+            "senso", "engine", "draft",
+            "--data", json.dumps({
+                "geo_question_id": prompt_id,
+                "raw_markdown": content[:5000],
+                "seo_title": f"{person_name} Promise Tracker — Receipts",
+                "summary": f"AI-powered promise tracking for {person_name}."
+            }),
+            "--output", "json", "--quiet"
+        ], capture_output=True, text=True, env=senso_env, timeout=15)
+
+        if draft_result.returncode == 0:
+            stdout = draft_result.stdout
             json_start = stdout.find("{")
             if json_start >= 0:
                 data = json.loads(stdout[json_start:])
-                content_id = data.get("id", "")
-                page_url = f"https://geo.senso.ai/knowledge-base"
-                print(f"  → ✅ Published to Senso knowledge base!")
-                print(f"  → Content ID: {content_id}")
-                print(f"  → View at: {page_url}")
-                return page_url
-            else:
-                print(f"  → ✅ Ingested into Senso (no ID returned)")
-                return "https://geo.senso.ai/knowledge-base"
+                content_id = data.get("content_id", "")
+                print(f"  → ✅ Saved to Senso (content_id: {content_id})")
+                return f"https://geo.senso.ai/drafts"
         else:
-            print(f"  ⚠️ Ingest failed: {ingest_result.stderr[:200]}")
-            return ""
+            print(f"  ⚠️ Senso draft error: {draft_result.stderr[:200]}")
+        return ""
 
     except subprocess.TimeoutExpired:
-        print(f"  ⚠️ Senso timed out — content saved locally")
+        print(f"  ⚠️ Senso timed out")
         return ""
     except Exception as e:
         print(f"  ⚠️ Senso error: {e}")
@@ -514,9 +531,42 @@ def run_receipts(person_name: str):
             "verdict_data": verdict or {"verdict": "pending", "confidence": 0, "summary": "Deadline not yet reached"}
         })
 
+    # Pull ALL promises for this person from ClickHouse for the full page
+    try:
+        db = get_db()
+        all_promises_result = db.query("""
+            SELECT promise, deadline, source_url, status, evidence
+            FROM promises WHERE person = %(person)s
+            ORDER BY created_at ASC
+        """, parameters={"person": person_name})
+        
+        all_promises_for_page = []
+        for row in all_promises_result.result_rows:
+            promise, deadline, source_url, status, evidence = row
+            verdict_map = {
+                "✅ Kept": "kept", "❌ Broken": "broken",
+                "⚠️ Partial": "partial", "❓ Unclear": "unclear",
+                "pending": "pending", "checking": "pending"
+            }
+            verdict_str = verdict_map.get(status, "pending")
+            all_promises_for_page.append({
+                "promise": promise,
+                "deadline": deadline,
+                "source_url": source_url,
+                "verdict_data": {
+                    "verdict": verdict_str,
+                    "confidence": 0.8 if verdict_str not in ["pending"] else 0,
+                    "summary": evidence if evidence else "Deadline not yet reached",
+                    "evidence_url": source_url
+                }
+            })
+    except Exception as e:
+        print(f"  ⚠️ Could not load all promises: {e}")
+        all_promises_for_page = promises_with_verdicts
+
     # Publish to GitHub Pages (public URL) + Senso knowledge base
-    page_url = publish_to_github_pages(person_name, promises_with_verdicts)
-    publish_to_senso(person_name, promises_with_verdicts)
+    page_url = publish_to_github_pages(person_name, all_promises_for_page)
+    publish_to_senso(person_name, all_promises_for_page)
 
     # Summary
     print(f"\n{'='*60}")
@@ -530,6 +580,13 @@ def run_receipts(person_name: str):
     if page_url:
         print(f"\n🔗 Published: {page_url}")
     print(f"{'='*60}\n")
+
+    # Regenerate homepage
+    try:
+        from generate_homepage import generate_homepage
+        generate_homepage()
+    except Exception as e:
+        print(f"  ⚠️ Homepage failed: {e}")
 
     return promises_with_verdicts
 
