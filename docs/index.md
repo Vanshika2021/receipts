@@ -6,3 +6,4 @@
 - [Mark Zukerberg](mark-zukerberg.html) — May 23, 2026
 - [Mark Zuckerberg](mark-zuckerberg.html) — May 23, 2026
 - [Donald Trump](donald-trump.html) — May 23, 2026
+- [Boris Johnson](boris-johnson.html) — May 23, 2026
