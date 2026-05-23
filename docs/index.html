@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Receipts — Public Promise Tracker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; background: #0f172a; color: #e2e8f0; min-height: 100vh; }
+  
+  header { padding: 40px 20px; text-align: center; border-bottom: 1px solid #1e293b; }
+  header h1 { font-size: 2.5rem; color: #00D4AA; margin-bottom: 8px; }
+  header p { color: #94a3b8; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+  
+  .global-stats { display: flex; justify-content: center; gap: 40px; padding: 30px 20px; background: #1e293b; }
+  .stat { text-align: center; }
+  .stat-number { font-size: 2rem; font-weight: bold; color: #00D4AA; }
+  .stat-label { color: #94a3b8; font-size: 0.85rem; margin-top: 4px; }
+  
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px; padding: 40px 20px; max-width: 1200px; margin: 0 auto; }
+  
+  .card { background: #1e293b; border-radius: 12px; padding: 24px; text-decoration: none; color: inherit; border: 1px solid #334155; transition: all 0.2s; display: block; }
+  .card:hover { border-color: #00D4AA; transform: translateY(-2px); box-shadow: 0 8px 25px rgba(0,212,170,0.15); }
+  
+  .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .card-header h2 { font-size: 1.2rem; color: #f1f5f9; }
+  .keep-rate { font-size: 0.85rem; color: #94a3b8; white-space: nowrap; margin-left: 8px; }
+  
+  .stats { display: flex; gap: 12px; font-size: 0.85rem; color: #94a3b8; margin-bottom: 12px; flex-wrap: wrap; }
+  
+  .verdict-bar { display: flex; height: 6px; border-radius: 3px; overflow: hidden; background: #0f172a; }
+  .verdict-bar div { height: 100%; }
+  
+  .legend { display: flex; gap: 16px; justify-content: center; padding: 0 20px 20px; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #94a3b8; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 50%; }
+  
+  footer { text-align: center; padding: 40px 20px; color: #475569; font-size: 0.8rem; border-top: 1px solid #1e293b; }
+  footer a { color: #00D4AA; text-decoration: none; }
+  
+  .updated { text-align: center; color: #475569; font-size: 0.8rem; padding: 10px; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🧾 Receipts</h1>
+  <p>AI-powered public accountability. We track what powerful people promise — and whether they deliver.</p>
+</header>
+
+<div class="global-stats">
+  <div class="stat">
+    <div class="stat-number">22</div>
+    <div class="stat-label">Promises Tracked</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" style="color:#22c55e">4</div>
+    <div class="stat-label">✅ Kept</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" style="color:#ef4444">7</div>
+    <div class="stat-label">❌ Broken</div>
+  </div>
+  <div class="stat">
+    <div class="stat-number" style="color:#f59e0b">0</div>
+    <div class="stat-label">⚠️ Partial</div>
+  </div>
+</div>
+
+<div class="legend">
+  <div class="legend-item"><div class="legend-dot" style="background:#22c55e"></div> Kept</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#ef4444"></div> Broken</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#f59e0b"></div> Partial</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#94a3b8"></div> Unclear</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#1e293b;border:1px solid #334155"></div> Pending</div>
+</div>
+
+<div class="grid">
+  
+        <a href="sam-altman.html" class="card">
+            <div class="card-header">
+                <h2>Sam Altman</h2>
+                <span class="keep-rate">🟢 100% kept</span>
+            </div>
+            <div class="stats">
+                <span title="Total">📋 14 promises</span>
+                <span title="Kept">✅ 4</span>
+                <span title="Broken">❌ 0</span>
+                <span title="Pending">⏳ 6</span>
+            </div>
+            
+            <div class="verdict-bar">
+                <div style="width:28%;background:#22c55e" title="Kept: 4"></div>
+                <div style="width:0%;background:#ef4444" title="Broken: 0"></div>
+                <div style="width:0%;background:#f59e0b" title="Partial: 0"></div>
+                <div style="width:28%;background:#94a3b8" title="Unclear: 4"></div>
+                <div style="width:44%;background:#1e293b" title="Pending: 6"></div>
+            </div>
+        </a>
+        <a href="elon-musk.html" class="card">
+            <div class="card-header">
+                <h2>Elon Musk</h2>
+                <span class="keep-rate">🔴 0% kept</span>
+            </div>
+            <div class="stats">
+                <span title="Total">📋 7 promises</span>
+                <span title="Kept">✅ 0</span>
+                <span title="Broken">❌ 7</span>
+                <span title="Pending">⏳ 0</span>
+            </div>
+            
+            <div class="verdict-bar">
+                <div style="width:0%;background:#22c55e" title="Kept: 0"></div>
+                <div style="width:100%;background:#ef4444" title="Broken: 7"></div>
+                <div style="width:0%;background:#f59e0b" title="Partial: 0"></div>
+                <div style="width:0%;background:#94a3b8" title="Unclear: 0"></div>
+                <div style="width:0%;background:#1e293b" title="Pending: 0"></div>
+            </div>
+        </a>
+        <a href="mark-zuckerberg[c.html" class="card">
+            <div class="card-header">
+                <h2>Mark Zuckerberg[C</h2>
+                <span class="keep-rate">⏳ Pending</span>
+            </div>
+            <div class="stats">
+                <span title="Total">📋 1 promises</span>
+                <span title="Kept">✅ 0</span>
+                <span title="Broken">❌ 0</span>
+                <span title="Pending">⏳ 1</span>
+            </div>
+            
+        </a>
+</div>
+
+<div class="updated">Last updated: May 23, 2026 at 01:56 PM</div>
+
+<footer>
+  Built at <strong>Agentic Engineering Hack 2026</strong> · 
+  Powered by <a href="https://nimbleway.com">Nimble</a>, 
+  <a href="https://clickhouse.com">ClickHouse</a>, 
+  <a href="https://senso.ai">Senso</a>, 
+  <a href="https://anthropic.com">Claude</a>, 
+  <a href="https://datadoghq.com">Datadog</a> ·
+  <a href="https://github.com/Vanshika2021/receipts">GitHub</a>
+</footer>
+
+</body>
+</html>
