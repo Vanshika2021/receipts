@@ -23,3 +23,4 @@
 - [Mark Zuckerberg](mark-zuckerberg.html) — May 23, 2026
 - [Rishi Sunak](rishi-sunak.html) — May 23, 2026
 - [Jef Bezos](jef-bezos.html) — May 23, 2026
+- [Mark Carney](mark-carney.html) — May 23, 2026
