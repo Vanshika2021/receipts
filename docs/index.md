@@ -11,3 +11,4 @@
 - [Narendra Modi](narendra-modi.html) — May 23, 2026
 - [Boris Johnson](boris-johnson.html) — May 23, 2026
 - [Elon Musk](elon-musk.html) — May 23, 2026
+- [Narendra Modi](narendra-modi.html) — May 23, 2026
