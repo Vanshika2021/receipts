@@ -21,3 +21,4 @@
 - [Donald Trump](donald-trump.html) — May 23, 2026
 - [Narendra Modi](narendra-modi.html) — May 23, 2026
 - [Mark Zuckerberg](mark-zuckerberg.html) — May 23, 2026
+- [Rishi Sunak](rishi-sunak.html) — May 23, 2026
